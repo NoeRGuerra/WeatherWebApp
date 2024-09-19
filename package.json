@@ -1,0 +1,30 @@
+{
+    "name": "weatherwebapp",
+    "version": "1.0.0",
+    "description": "WebApp for The Odin Project Weather App Project",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "build": "webpack",
+        "start": "webpack serve --open"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@babel/core": "^7.25.2",
+        "@babel/preset-env": "^7.25.4",
+        "babel-loader": "^9.2.1",
+        "css-loader": "^7.1.2",
+        "eslint": "^7.32.0",
+        "eslint-config-airbnb-base": "^15.0.0",
+        "eslint-config-prettier": "^9.1.0",
+        "eslint-plugin-import": "^2.30.0",
+        "html-webpack-plugin": "^5.6.0",
+        "prettier": "3.3.3",
+        "style-loader": "^4.0.0",
+        "webpack": "^5.94.0",
+        "webpack-cli": "^5.1.4",
+        "webpack-dev-server": "^5.1.0"
+    }
+}
