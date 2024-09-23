@@ -27,6 +27,31 @@ function processWeatherData(weatherData) {
     };
 }
 
+function showWeatherData(location) {
+    const container = document.querySelector('#content');
+    container.replaceChildren();
+    const loadingParagraph = document.createElement('p');
+    loadingParagraph.textContent = 'Loading...';
+    container.append(loadingParagraph);
+
+    getWeatherData(location)
+        .then((data) => {
+            const weatherObj = processWeatherData(data);
+            container.replaceChildren();
+            const locationParagraph = document.createElement('p');
+            const currentTempParagraph = document.createElement('p');
+            locationParagraph.textContent = weatherObj.location;
+            currentTempParagraph.textContent = `${weatherObj.currentConditions.temp} F`;
+            container.append(locationParagraph, currentTempParagraph);
+        })
+        .catch((error) => {
+            container.replaceChildren();
+            const errorMessage = document.createElement('p');
+            errorMessage.textContent = `Error: ${error.message}`;
+            container.append(errorMessage);
+        });
+}
+
 function showInputPage() {
     const container = document.querySelector('#content');
     const tagline = document.createElement('p');
@@ -35,6 +60,10 @@ function showInputPage() {
     const input = document.createElement('input');
     const submitBtn = document.createElement('button');
     submitBtn.textContent = 'Submit';
+    submitBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        showWeatherData(input.value);
+    });
 
     inputForm.append(input, submitBtn);
     container.append(tagline, inputForm);
