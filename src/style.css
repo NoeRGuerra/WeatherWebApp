@@ -1,0 +1,26 @@
+.current-weather {
+    display: flex;
+    gap: 5px;
+    width: 100%;
+}
+
+.top-left {
+    flex: 1;
+    background-color: rgb(203, 203, 255);
+    display: flex;
+    gap: 5px;
+    border: 1px solid rgb(164, 164, 255);
+    align-items: center;
+    justify-content: center;
+}
+
+.top-right {
+    flex: 1;
+    padding: 10px;
+    background-color: rgb(203, 203, 255);
+    border: 1px solid rgb(164, 164, 255);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    text-align: center;
+}
