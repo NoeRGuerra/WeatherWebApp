@@ -55,8 +55,8 @@ function createDataContainer(value, text) {
 }
 
 function createTodayWeatherContainer(weatherObject) {
-    const container = document.createElement('div');
-    container.className = 'current-weather';
+    const weatherContainer = document.createElement('div');
+    weatherContainer.className = 'current-weather';
     const leftContainer = document.createElement('div');
     leftContainer.className = 'top-left';
     const rightContainer = document.createElement('div');
@@ -74,26 +74,30 @@ function createTodayWeatherContainer(weatherObject) {
     leftContainer.append(placeholderImg, currentTempText, conditionsText);
 
     const todayWeatherData = {
-        High: weatherObject.todayData.maxTemp,
-        Low: weatherObject.todayData.minTemp,
+        High: `${weatherObject.todayData.maxTemp}°`,
+        Low: `${weatherObject.todayData.minTemp}°`,
         Sunrise: weatherObject.todayData.sunrise,
         Sunset: weatherObject.todayData.sunset,
-        Rain: weatherObject.currentConditions.chanceOfPrecip,
-        Wind: weatherObject.currentConditions.windSpeed,
+        Rain: `${weatherObject.currentConditions.chanceOfPrecip} %`,
+        Wind: `${weatherObject.currentConditions.windSpeed} mph`,
     };
-    const dataArray = [];
-    for (const key in todayWeatherData) {
-        const dataContainer = createDataContainer(todayWeatherData[key], key);
-        dataArray.push(dataContainer);
-    }
+    const dataArray = Object.entries(todayWeatherData).map(([key, value]) =>
+        createDataContainer(value, key),
+    );
 
-    for (const valueContainer of dataArray) {
-        rightContainer.append(valueContainer);
-    }
+    dataArray.forEach((container) => rightContainer.append(container));
 
-    container.append(leftContainer, rightContainer);
+    weatherContainer.append(leftContainer, rightContainer);
 
-    return container;
+    return weatherContainer;
+}
+
+function createHeader(text, level) {
+    const locationHeading = document.createElement(level);
+    locationHeading.className = 'heading';
+    locationHeading.textContent = text;
+
+    return locationHeading;
 }
 
 function showWeatherData(location) {
@@ -107,8 +111,10 @@ function showWeatherData(location) {
         .then((data) => {
             const weatherObj = processWeatherData(data);
             console.log(weatherObj);
+            const locationHeading = createHeader(weatherObj.location, 'h2');
             const weatherContainer = createTodayWeatherContainer(weatherObj);
             mainContainer.replaceChildren();
+            mainContainer.append(locationHeading);
             mainContainer.append(weatherContainer);
         })
         .catch((error) => {
@@ -143,4 +149,4 @@ function showInputPage(location = null) {
     container.append(inputForm);
 }
 
-showInputPage();
+showInputPage('Reynosa');
