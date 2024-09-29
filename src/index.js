@@ -6,8 +6,20 @@ import {
     parseISO,
 } from 'date-fns';
 import config from '../config';
-import placeholderIcon from './icons/placeholder.svg';
 import './style.css';
+
+const importAllIcons = require.context('./icons', false, /\.svg$/);
+const icons = {};
+
+importAllIcons.keys().forEach((iconPath) => {
+    const iconName = iconPath.replace('./', '').replace('.svg', '');
+    icons[iconName] = importAllIcons(iconPath);
+});
+
+const units = {
+    temp: 'F',
+    wind: 'mph',
+};
 
 function getWeatherData(location) {
     const { apiKey } = config;
@@ -78,24 +90,23 @@ function createTodayWeatherContainer(weatherObject) {
     const rightContainer = document.createElement('div');
     rightContainer.className = 'top-right';
 
-    const placeholderImg = document.createElement('img');
-    placeholderImg.src = placeholderIcon;
-    placeholderImg.style.width = '100px';
-    placeholderImg.style.height = 'auto';
-    const currentTempText = document.createElement('p');
-    currentTempText.textContent = `${weatherObject.currentConditions.temp} F`;
-    const conditionsText = document.createElement('p');
-    conditionsText.textContent = weatherObject.currentConditions.conditions;
+    const icon = document.createElement('img');
+    icon.src = icons[weatherObject.currentConditions.icon];
+    icon.className = 'big-icon';
+    const currentTemp = createDataContainer(
+        `${weatherObject.currentConditions.temp} ${units.temp}°`,
+        weatherObject.currentConditions.conditions,
+    );
 
-    leftContainer.append(placeholderImg, currentTempText, conditionsText);
+    leftContainer.append(icon, currentTemp);
 
     const todayWeatherData = {
-        High: `${weatherObject.todayData.maxTemp}°`,
-        Low: `${weatherObject.todayData.minTemp}°`,
+        High: `${weatherObject.todayData.maxTemp} ${units.temp}°`,
+        Low: `${weatherObject.todayData.minTemp} ${units.temp}°`,
         Sunrise: weatherObject.todayData.sunrise,
         Sunset: weatherObject.todayData.sunset,
         Rain: `${weatherObject.currentConditions.chanceOfPrecip} %`,
-        Wind: `${weatherObject.currentConditions.windSpeed} mph`,
+        Wind: `${weatherObject.currentConditions.windSpeed} ${units.wind}`,
     };
     const dataArray = Object.entries(todayWeatherData).map(([key, value]) =>
         createDataContainer(value, key),
@@ -115,11 +126,10 @@ function createWeatherCard(forecast) {
     const parsedTime = parse(forecast.datetime, 'HH:mm:ss', new Date());
     time.textContent = format(parsedTime, 'h a');
     const icon = document.createElement('img');
-    icon.src = placeholderIcon;
-    icon.style.width = '40px';
-    icon.style.height = 'auto';
+    icon.src = icons[forecast.icon];
+    icon.className = 'icon';
     const temp = document.createElement('p');
-    temp.textContent = `${forecast.temp} °`;
+    temp.textContent = `${forecast.temp} ${units.temp}°`;
     container.append(time, icon, temp);
 
     return container;
@@ -163,17 +173,19 @@ function createWeatherRow(forecast) {
         format(date, 'MM/dd'),
     );
     const icon = document.createElement('img');
-    icon.src = placeholderIcon;
-    icon.style.width = '25px';
-    icon.style.height = 'auto';
+    icon.src = icons[forecast.icon];
+    icon.className = 'icon';
 
-    const minTempContainer = createDataContainer(`${forecast.tempmin}°`, 'Low');
+    const minTempContainer = createDataContainer(
+        `${forecast.tempmin} ${units.temp}°`,
+        'Low',
+    );
     const maxTempContainer = createDataContainer(
-        `${forecast.tempmax}°`,
+        `${forecast.tempmax} ${units.temp}°`,
         'High',
     );
     const windContainer = createDataContainer(
-        `${forecast.windspeed} mph`,
+        `${forecast.windspeed} ${units.wind}`,
         'Wind',
     );
     const rainContainer = createDataContainer(
