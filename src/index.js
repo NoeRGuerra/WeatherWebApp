@@ -21,21 +21,14 @@ const units = {
     wind: 'mph',
 };
 
-function getWeatherData(location) {
+async function getWeatherData(location) {
     const { apiKey } = config;
     const apiURL = `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${location}?unitGroup=us&key=${apiKey}&contentType=json`;
-    return fetch(apiURL)
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error(
-                    `Network response not OK: ${response.statusText}`,
-                );
-            }
-            return response.json();
-        })
-        .catch((error) => {
-            throw error;
-        });
+    const response = await fetch(apiURL);
+    if (!response.ok) {
+        throw new Error(`Network response not OK: ${response.statusText}`);
+    }
+    return response.json();
 }
 
 function processWeatherData(weatherData) {
@@ -249,27 +242,27 @@ function showMessage(message, type = 'message') {
     }, 5000);
 }
 
-function updatePage() {
+async function updatePage() {
     // Call API and redraw page
     const currentLocation = document.querySelector('h2').textContent;
-    getWeatherData(currentLocation)
-        .then((data) => {
-            const updatedWeatherObject = processWeatherData(data);
-            if (units.temp === 'C') {
-                drawPage(convertUnits(updatedWeatherObject));
-            } else {
-                drawPage(updatedWeatherObject);
-            }
-            const updateButton = document.querySelector('button');
-            updateButton.disabled = true;
-            setTimeout(() => {
-                updateButton.disabled = false;
-            }, 5000);
-            showMessage('Update successful');
-        })
-        .catch((error) => {
-            showMessage(error, 'error');
-        });
+    try {
+        const data = await getWeatherData(currentLocation);
+        const updatedWeatherObject = processWeatherData(data);
+
+        if (units.temp === 'C') {
+            drawPage(convertUnits(updatedWeatherObject));
+        } else {
+            drawPage(updatedWeatherObject);
+        }
+        const updateButton = document.querySelector('button');
+        updateButton.disabled = true;
+        setTimeout(() => {
+            updateButton.disabled = false;
+        }, 5000);
+        showMessage('Update successful');
+    } catch (error) {
+        showMessage(error, 'error');
+    }
 }
 
 function createButton(text, onClick) {
@@ -381,23 +374,21 @@ function drawPage(weatherObject) {
     );
 }
 
-function showWeatherData(location) {
+async function showWeatherData(location) {
     const mainContainer = document.querySelector('#content');
     mainContainer.replaceChildren();
     const loadingParagraph = document.createElement('p');
     loadingParagraph.textContent = 'Loading...';
     mainContainer.append(loadingParagraph);
-
-    getWeatherData(location)
-        .then((data) => {
-            const weatherObj = processWeatherData(data);
-            // console.log(data);
-            // console.log(weatherObj);
-            drawPage(weatherObj);
-        })
-        .catch((error) => {
-            showMessage(error, 'message');
-        });
+    try {
+        const data = await getWeatherData(location);
+        const weatherObj = processWeatherData(data);
+        // console.log(data);
+        // console.log(weatherObj);
+        drawPage(weatherObj);
+    } catch (error) {
+        showMessage(error, 'message');
+    }
 }
 
 function showInputPage(location = null) {

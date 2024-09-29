@@ -2,6 +2,7 @@
     display: flex;
     gap: 5px;
     padding: 10px;
+    flex-wrap: wrap;
 }
 
 .top-left {
@@ -27,7 +28,9 @@
 .hourly-forecast {
     display: flex;
     justify-content: space-around;
+    flex-wrap: wrap;
     padding: 10px;
+    gap: 2px;
 }
 
 .weather-card {
@@ -72,6 +75,7 @@
 .big-icon {
     width: 150px;
     height: auto;
+    padding: 5px;
 }
 
 .update-label {
