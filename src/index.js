@@ -1,4 +1,10 @@
-import { parse, differenceInMinutes, format, fromUnixTime } from 'date-fns';
+import {
+    parse,
+    differenceInMinutes,
+    format,
+    fromUnixTime,
+    parseISO,
+} from 'date-fns';
 import config from '../config';
 import placeholderIcon from './icons/placeholder.svg';
 import './style.css';
@@ -16,7 +22,6 @@ function getWeatherData(location) {
             return response.json();
         })
         .catch((error) => {
-            console.error('Error');
             throw error;
         });
 }
@@ -149,6 +154,56 @@ function createLastUpdatedLabel(timestamp) {
     return lastUpdatedLabel;
 }
 
+function createWeatherRow(forecast) {
+    const container = document.createElement('div');
+    container.className = 'weather-row';
+    const date = parseISO(forecast.datetime);
+    const dateContainer = createDataContainer(
+        format(date, 'EEE'),
+        format(date, 'MM/dd'),
+    );
+    const icon = document.createElement('img');
+    icon.src = placeholderIcon;
+    icon.style.width = '25px';
+    icon.style.height = 'auto';
+
+    const minTempContainer = createDataContainer(`${forecast.tempmin}°`, 'Low');
+    const maxTempContainer = createDataContainer(
+        `${forecast.tempmax}°`,
+        'High',
+    );
+    const windContainer = createDataContainer(
+        `${forecast.windspeed} mph`,
+        'Wind',
+    );
+    const rainContainer = createDataContainer(
+        `${forecast.precipprob}%`,
+        'Rain',
+    );
+
+    container.append(
+        dateContainer,
+        icon,
+        minTempContainer,
+        maxTempContainer,
+        windContainer,
+        rainContainer,
+    );
+
+    return container;
+}
+
+function createFourteenDayContainer(weatherObj) {
+    const container = document.createElement('div');
+    container.className = 'twoweeks-forecast';
+
+    weatherObj.twoWeeks.forEach((day) => {
+        container.append(createWeatherRow(day));
+    });
+
+    return container;
+}
+
 function showWeatherData(location) {
     const mainContainer = document.querySelector('#content');
     mainContainer.replaceChildren();
@@ -159,15 +214,20 @@ function showWeatherData(location) {
     getWeatherData(location)
         .then((data) => {
             const weatherObj = processWeatherData(data);
-            console.log(data);
-            console.log(weatherObj);
+            // console.log(data);
+            // console.log(weatherObj);
+
             const locationHeading = createHeader(weatherObj.location, 'h2');
             const lastUpdatedLabel = createLastUpdatedLabel(
                 weatherObj.currentConditions.lastUpdate,
             );
             const weatherContainer = createTodayWeatherContainer(weatherObj);
+
             const forecastHeading = createHeader("Today's weather", 'h3');
             const forecastContainer = createHourlyForecastContainer(weatherObj);
+
+            const fourteenDayHeading = createHeader('14-day forecast', 'h3');
+            const fourteenDayContainer = createFourteenDayContainer(weatherObj);
 
             mainContainer.replaceChildren();
             mainContainer.append(
@@ -176,6 +236,8 @@ function showWeatherData(location) {
                 weatherContainer,
                 forecastHeading,
                 forecastContainer,
+                fourteenDayHeading,
+                fourteenDayContainer,
             );
         })
         .catch((error) => {

@@ -1,16 +1,13 @@
 .current-weather {
     display: flex;
     gap: 5px;
-    background-color: aliceblue;
     padding:10px;
 }
 
 .top-left {
     flex: 1;
-    background-color: rgb(203, 203, 255);
     display: flex;
     gap: 5px;
-    border: 1px solid rgb(164, 164, 255);
     align-items: center;
     justify-content: center;
 }
@@ -18,8 +15,6 @@
 .top-right {
     flex: 1;
     padding: 10px;
-    background-color: rgb(203, 203, 255);
-    border: 1px solid rgb(164, 164, 255);
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 10px;
@@ -32,12 +27,34 @@
 .hourly-forecast {
     display: flex;
     justify-content: space-around;
-    background-color: aliceblue;
     padding: 10px;
 }
 
 .weather-card {
+    padding: 0 20px;
+}
+
+.weather-row {
+    display: flex;
+    justify-content: center;
+}
+
+.weather-row > div{
+    flex: 1;
+}
+
+.twoweeks-forecast {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+}
+
+.weather-card, .weather-row, .top-left, .top-right {
     background-color: rgb(203, 203, 255);
     border: 1px solid rgb(164, 164, 255);
-    padding: 0 20px;
+}
+
+.current-weather, .twoweeks-forecast, .hourly-forecast {
+    background-color: aliceblue;
 }
