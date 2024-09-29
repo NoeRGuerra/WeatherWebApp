@@ -82,6 +82,67 @@ function createDataContainer(value, text) {
     return container;
 }
 
+function convertToCelsius(tempInFarenheit) {
+    return ((tempInFarenheit - 32) * 5) / 9;
+}
+
+function convertToFahrenheit(tempInCelsius) {
+    return (tempInCelsius * 9) / 5 + 32;
+}
+
+function convertToKmh(speedInMph) {
+    return speedInMph * 1.609;
+}
+
+function convertToMph(speedInKmh) {
+    return speedInKmh / 1.609;
+}
+
+function convertUnits(weatherObject) {
+    // Convert units locally and redraw page
+    let convertTemp = convertToCelsius;
+    let convertSpeed = convertToKmh;
+    if (units.temp === 'C') {
+        convertTemp = convertToFahrenheit;
+        convertSpeed = convertToMph;
+    }
+    const updatedWeatherObject = JSON.parse(JSON.stringify(weatherObject));
+
+    updatedWeatherObject.currentConditions.temp = convertTemp(
+        weatherObject.currentConditions.temp,
+    );
+    updatedWeatherObject.todayData.maxTemp = convertTemp(
+        weatherObject.todayData.maxTemp,
+    );
+    updatedWeatherObject.todayData.minTemp = convertTemp(
+        weatherObject.todayData.minTemp,
+    );
+    updatedWeatherObject.currentConditions.windSpeed = convertSpeed(
+        weatherObject.currentConditions.windSpeed,
+    );
+
+    weatherObject.twentyfourHours.forEach((forecast, index) => {
+        updatedWeatherObject.twentyfourHours[index].temp = convertTemp(
+            forecast.temp,
+        );
+        updatedWeatherObject.twentyfourHours[index].windspeed = convertSpeed(
+            forecast.windspeed,
+        );
+    });
+    weatherObject.twoWeeks.forEach((day, index) => {
+        updatedWeatherObject.twoWeeks[index].tempmax = convertTemp(day.tempmax);
+        updatedWeatherObject.twoWeeks[index].tempmin = convertTemp(day.tempmin);
+        updatedWeatherObject.twoWeeks[index].windspeed = convertSpeed(
+            day.windspeed,
+        );
+    });
+
+    units.temp = units.temp === 'F' ? 'C' : 'F';
+    units.wind = units.wind === 'mph' ? 'kmh' : 'mph';
+
+    drawPage(updatedWeatherObject);
+}
+
 function createTodayWeatherContainer(weatherObject) {
     const weatherContainer = document.createElement('div');
     weatherContainer.className = 'current-weather';
@@ -94,19 +155,35 @@ function createTodayWeatherContainer(weatherObject) {
     icon.src = icons[weatherObject.currentConditions.icon];
     icon.className = 'big-icon';
     const currentTemp = createDataContainer(
-        `${weatherObject.currentConditions.temp} ${units.temp}°`,
+        `${Math.round(weatherObject.currentConditions.temp)} ${units.temp}°`,
         weatherObject.currentConditions.conditions,
     );
 
+    const tempText = currentTemp.querySelector('p');
+    tempText.addEventListener('click', () => {
+        convertUnits(weatherObject);
+    });
+
     leftContainer.append(icon, currentTemp);
 
+    const parsedSunrise = parse(
+        weatherObject.todayData.sunrise,
+        'HH:mm:ss',
+        new Date(),
+    );
+    const parsedSunset = parse(
+        weatherObject.todayData.sunset,
+        'HH:mm:ss',
+        new Date(),
+    );
+
     const todayWeatherData = {
-        High: `${weatherObject.todayData.maxTemp} ${units.temp}°`,
-        Low: `${weatherObject.todayData.minTemp} ${units.temp}°`,
-        Sunrise: weatherObject.todayData.sunrise,
-        Sunset: weatherObject.todayData.sunset,
+        High: `${Math.round(weatherObject.todayData.maxTemp)} ${units.temp}°`,
+        Low: `${Math.round(weatherObject.todayData.minTemp)} ${units.temp}°`,
+        Sunrise: format(parsedSunrise, 'h:mm a'),
+        Sunset: format(parsedSunset, 'h:mm a'),
         Rain: `${weatherObject.currentConditions.chanceOfPrecip} %`,
-        Wind: `${weatherObject.currentConditions.windSpeed} ${units.wind}`,
+        Wind: `${Math.round(weatherObject.currentConditions.windSpeed)} ${units.wind}`,
     };
     const dataArray = Object.entries(todayWeatherData).map(([key, value]) =>
         createDataContainer(value, key),
@@ -129,7 +206,7 @@ function createWeatherCard(forecast) {
     icon.src = icons[forecast.icon];
     icon.className = 'icon';
     const temp = document.createElement('p');
-    temp.textContent = `${forecast.temp} ${units.temp}°`;
+    temp.textContent = `${Math.round(forecast.temp)} ${units.temp}°`;
     container.append(time, icon, temp);
 
     return container;
@@ -155,13 +232,31 @@ function createHeader(text, level) {
     return locationHeading;
 }
 
+function updatePage() {
+    // Call API and redraw page
+    console.log('Update');
+}
+
+function createButton(text, onClick) {
+    const button = document.createElement('button');
+    button.textContent = text;
+    button.addEventListener('click', onClick);
+
+    return button;
+}
+
 function createLastUpdatedLabel(timestamp) {
+    const container = document.createElement('div');
+    container.className = 'update-label';
     const parsedDate = fromUnixTime(timestamp);
     const timeDifference = differenceInMinutes(new Date(), parsedDate);
     const lastUpdatedLabel = document.createElement('p');
     lastUpdatedLabel.textContent = `Updated ${timeDifference} minutes ago`;
+    const updateButton = createButton('🔁', updatePage);
 
-    return lastUpdatedLabel;
+    container.append(lastUpdatedLabel, updateButton);
+
+    return container;
 }
 
 function createWeatherRow(forecast) {
@@ -177,15 +272,15 @@ function createWeatherRow(forecast) {
     icon.className = 'icon';
 
     const minTempContainer = createDataContainer(
-        `${forecast.tempmin} ${units.temp}°`,
+        `${Math.round(forecast.tempmin)} ${units.temp}°`,
         'Low',
     );
     const maxTempContainer = createDataContainer(
-        `${forecast.tempmax} ${units.temp}°`,
+        `${Math.round(forecast.tempmax)} ${units.temp}°`,
         'High',
     );
     const windContainer = createDataContainer(
-        `${forecast.windspeed} ${units.wind}`,
+        `${Math.round(forecast.windspeed)} ${units.wind}`,
         'Wind',
     );
     const rainContainer = createDataContainer(
@@ -216,6 +311,39 @@ function createFourteenDayContainer(weatherObj) {
     return container;
 }
 
+function clearPage() {
+    const container = document.querySelector('#content');
+    container.replaceChildren();
+}
+
+function drawPage(weatherObject) {
+    clearPage();
+    const container = document.querySelector('#content');
+    const locationHeading = createHeader(weatherObject.location, 'h2');
+
+    const lastUpdatedLabel = createLastUpdatedLabel(
+        weatherObject.currentConditions.lastUpdate,
+    );
+    const weatherContainer = createTodayWeatherContainer(weatherObject);
+
+    const forecastHeading = createHeader("Today's weather", 'h3');
+    const forecastContainer = createHourlyForecastContainer(weatherObject);
+
+    const fourteenDayHeading = createHeader('14-day forecast', 'h3');
+    const fourteenDayContainer = createFourteenDayContainer(weatherObject);
+
+    container.replaceChildren();
+    container.append(
+        locationHeading,
+        lastUpdatedLabel,
+        weatherContainer,
+        forecastHeading,
+        forecastContainer,
+        fourteenDayHeading,
+        fourteenDayContainer,
+    );
+}
+
 function showWeatherData(location) {
     const mainContainer = document.querySelector('#content');
     mainContainer.replaceChildren();
@@ -228,29 +356,7 @@ function showWeatherData(location) {
             const weatherObj = processWeatherData(data);
             // console.log(data);
             // console.log(weatherObj);
-
-            const locationHeading = createHeader(weatherObj.location, 'h2');
-            const lastUpdatedLabel = createLastUpdatedLabel(
-                weatherObj.currentConditions.lastUpdate,
-            );
-            const weatherContainer = createTodayWeatherContainer(weatherObj);
-
-            const forecastHeading = createHeader("Today's weather", 'h3');
-            const forecastContainer = createHourlyForecastContainer(weatherObj);
-
-            const fourteenDayHeading = createHeader('14-day forecast', 'h3');
-            const fourteenDayContainer = createFourteenDayContainer(weatherObj);
-
-            mainContainer.replaceChildren();
-            mainContainer.append(
-                locationHeading,
-                lastUpdatedLabel,
-                weatherContainer,
-                forecastHeading,
-                forecastContainer,
-                fourteenDayHeading,
-                fourteenDayContainer,
-            );
+            drawPage(weatherObj);
         })
         .catch((error) => {
             mainContainer.replaceChildren();
