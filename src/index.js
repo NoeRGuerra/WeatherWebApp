@@ -1,3 +1,4 @@
+import { parse, differenceInMinutes, format, fromUnixTime } from 'date-fns';
 import config from '../config';
 import placeholderIcon from './icons/placeholder.svg';
 import './style.css';
@@ -21,6 +22,15 @@ function getWeatherData(location) {
 }
 
 function processWeatherData(weatherData) {
+    const twentyfourHours = [];
+    const currentIndex =
+        parseInt(new Date().toTimeString().split(':')[0], 10) + 1; // Get current hour + 1 to start 24-hour forecast in the next hour
+    twentyfourHours.push(...weatherData.days[0].hours.slice(currentIndex));
+    if (twentyfourHours.length < 24) {
+        twentyfourHours.push(
+            ...weatherData.days[1].hours.slice(0, 24 - twentyfourHours.length),
+        );
+    }
     return {
         location: weatherData.resolvedAddress,
         currentConditions: {
@@ -30,6 +40,7 @@ function processWeatherData(weatherData) {
             windSpeed: weatherData.currentConditions.windspeed,
             chanceOfPrecip: weatherData.currentConditions.precipprob,
             precipType: weatherData.currentConditions.preciptype,
+            lastUpdate: weatherData.currentConditions.datetimeEpoch,
         },
         todayData: {
             sunrise: weatherData.days[0].sunrise,
@@ -37,7 +48,7 @@ function processWeatherData(weatherData) {
             maxTemp: weatherData.days[0].tempmax,
             minTemp: weatherData.days[0].tempmin,
         },
-        todayHourly: weatherData.days[0].hours,
+        twentyfourHours,
         twoWeeks: weatherData.days.slice(1),
     };
 }
@@ -92,12 +103,50 @@ function createTodayWeatherContainer(weatherObject) {
     return weatherContainer;
 }
 
+function createWeatherCard(forecast) {
+    const container = document.createElement('div');
+    container.className = 'weather-card';
+    const time = document.createElement('p');
+    const parsedTime = parse(forecast.datetime, 'HH:mm:ss', new Date());
+    time.textContent = format(parsedTime, 'h a');
+    const icon = document.createElement('img');
+    icon.src = placeholderIcon;
+    icon.style.width = '40px';
+    icon.style.height = 'auto';
+    const temp = document.createElement('p');
+    temp.textContent = `${forecast.temp} °`;
+    container.append(time, icon, temp);
+
+    return container;
+}
+
+function createHourlyForecastContainer(weatherObj) {
+    const hourlyForecastContainer = document.createElement('div');
+    hourlyForecastContainer.className = 'hourly-forecast';
+    for (let i = 0; i < 24; i += 3) {
+        const forecast = weatherObj.twentyfourHours[i];
+        const weatherCard = createWeatherCard(forecast);
+        hourlyForecastContainer.append(weatherCard);
+    }
+
+    return hourlyForecastContainer;
+}
+
 function createHeader(text, level) {
     const locationHeading = document.createElement(level);
     locationHeading.className = 'heading';
     locationHeading.textContent = text;
 
     return locationHeading;
+}
+
+function createLastUpdatedLabel(timestamp) {
+    const parsedDate = fromUnixTime(timestamp);
+    const timeDifference = differenceInMinutes(new Date(), parsedDate);
+    const lastUpdatedLabel = document.createElement('p');
+    lastUpdatedLabel.textContent = `Updated ${timeDifference} minutes ago`;
+
+    return lastUpdatedLabel;
 }
 
 function showWeatherData(location) {
@@ -110,12 +159,24 @@ function showWeatherData(location) {
     getWeatherData(location)
         .then((data) => {
             const weatherObj = processWeatherData(data);
+            console.log(data);
             console.log(weatherObj);
             const locationHeading = createHeader(weatherObj.location, 'h2');
+            const lastUpdatedLabel = createLastUpdatedLabel(
+                weatherObj.currentConditions.lastUpdate,
+            );
             const weatherContainer = createTodayWeatherContainer(weatherObj);
+            const forecastHeading = createHeader("Today's weather", 'h3');
+            const forecastContainer = createHourlyForecastContainer(weatherObj);
+
             mainContainer.replaceChildren();
-            mainContainer.append(locationHeading);
-            mainContainer.append(weatherContainer);
+            mainContainer.append(
+                locationHeading,
+                lastUpdatedLabel,
+                weatherContainer,
+                forecastHeading,
+                forecastContainer,
+            );
         })
         .catch((error) => {
             mainContainer.replaceChildren();
@@ -149,4 +210,4 @@ function showInputPage(location = null) {
     container.append(inputForm);
 }
 
-showInputPage('Reynosa');
+showInputPage('Concord NC');

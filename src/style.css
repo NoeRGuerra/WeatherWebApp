@@ -1,7 +1,6 @@
 .current-weather {
     display: flex;
     gap: 5px;
-    width: 100%;
     background-color: aliceblue;
     padding:10px;
 }
@@ -24,9 +23,21 @@
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 10px;
+}
+
+#content {
     text-align: center;
 }
 
-.heading {
-    text-align: center;
+.hourly-forecast {
+    display: flex;
+    justify-content: space-around;
+    background-color: aliceblue;
+    padding: 10px;
+}
+
+.weather-card {
+    background-color: rgb(203, 203, 255);
+    border: 1px solid rgb(164, 164, 255);
+    padding: 0 20px;
 }
