@@ -1,7 +1,7 @@
 .current-weather {
     display: flex;
     gap: 5px;
-    padding:10px;
+    padding: 10px;
 }
 
 .top-left {
@@ -39,7 +39,7 @@
     justify-content: center;
 }
 
-.weather-row > div{
+.weather-row > div {
     flex: 1;
 }
 
@@ -50,12 +50,17 @@
     padding: 10px;
 }
 
-.weather-card, .weather-row, .top-left, .top-right {
+.weather-card,
+.weather-row,
+.top-left,
+.top-right {
     background-color: rgb(203, 203, 255);
     border: 1px solid rgb(164, 164, 255);
 }
 
-.current-weather, .twoweeks-forecast, .hourly-forecast {
+.current-weather,
+.twoweeks-forecast,
+.hourly-forecast {
     background-color: aliceblue;
 }
 
@@ -79,4 +84,34 @@
 .top-left > div > :first-child:hover {
     text-decoration: underline;
     cursor: pointer;
+}
+
+.flash-error {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 10px;
+    border: 1px solid #f5c6cb;
+    border-radius: 5px;
+    opacity: 1;
+    transition: opacity 1s ease-out;
+}
+
+.flash-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #d8f8d7;
+    color: #1c7236;
+    padding: 10px;
+    border: 1px solid #c6f5d4;
+    border-radius: 5px;
+    opacity: 1;
+    transition: opacity 1s ease-out;
+}
+
+.hidden {
+    opacity: 0;
 }

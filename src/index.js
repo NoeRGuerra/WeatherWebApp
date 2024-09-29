@@ -99,7 +99,7 @@ function convertToMph(speedInKmh) {
 }
 
 function convertUnits(weatherObject) {
-    // Convert units locally and redraw page
+    // Convert units locally
     let convertTemp = convertToCelsius;
     let convertSpeed = convertToKmh;
     if (units.temp === 'C') {
@@ -140,7 +140,7 @@ function convertUnits(weatherObject) {
     units.temp = units.temp === 'F' ? 'C' : 'F';
     units.wind = units.wind === 'mph' ? 'kmh' : 'mph';
 
-    drawPage(updatedWeatherObject);
+    return updatedWeatherObject;
 }
 
 function createTodayWeatherContainer(weatherObject) {
@@ -161,7 +161,7 @@ function createTodayWeatherContainer(weatherObject) {
 
     const tempText = currentTemp.querySelector('p');
     tempText.addEventListener('click', () => {
-        convertUnits(weatherObject);
+        drawPage(convertUnits(weatherObject));
     });
 
     leftContainer.append(icon, currentTemp);
@@ -232,9 +232,44 @@ function createHeader(text, level) {
     return locationHeading;
 }
 
+function showMessage(message, type = 'message') {
+    // Show a disappearing message or error
+    const container = document.createElement('div');
+    container.className = `flash-${type}`;
+    const messageElement = document.createElement('span');
+    messageElement.textContent = message;
+    container.append(messageElement);
+    document.querySelector('#content').append(container);
+
+    setTimeout(() => {
+        container.classList.add('hidden');
+        setTimeout(() => {
+            container.remove();
+        }, 1000);
+    }, 5000);
+}
+
 function updatePage() {
     // Call API and redraw page
-    console.log('Update');
+    const currentLocation = document.querySelector('h2').textContent;
+    getWeatherData(currentLocation)
+        .then((data) => {
+            const updatedWeatherObject = processWeatherData(data);
+            if (units.temp === 'C') {
+                drawPage(convertUnits(updatedWeatherObject));
+            } else {
+                drawPage(updatedWeatherObject);
+            }
+            const updateButton = document.querySelector('button');
+            updateButton.disabled = true;
+            setTimeout(() => {
+                updateButton.disabled = false;
+            }, 5000);
+            showMessage('Update successful');
+        })
+        .catch((error) => {
+            showMessage(error, 'error');
+        });
 }
 
 function createButton(text, onClick) {
@@ -252,7 +287,9 @@ function createLastUpdatedLabel(timestamp) {
     const timeDifference = differenceInMinutes(new Date(), parsedDate);
     const lastUpdatedLabel = document.createElement('p');
     lastUpdatedLabel.textContent = `Updated ${timeDifference} minutes ago`;
-    const updateButton = createButton('🔁', updatePage);
+    const updateButton = createButton('🔁', () => {
+        updatePage();
+    });
 
     container.append(lastUpdatedLabel, updateButton);
 
@@ -359,10 +396,7 @@ function showWeatherData(location) {
             drawPage(weatherObj);
         })
         .catch((error) => {
-            mainContainer.replaceChildren();
-            const errorMessage = document.createElement('p');
-            errorMessage.textContent = `Error: ${error.message}`;
-            mainContainer.append(errorMessage);
+            showMessage(error, 'message');
         });
 }
 
@@ -390,4 +424,4 @@ function showInputPage(location = null) {
     container.append(inputForm);
 }
 
-showInputPage('Concord NC');
+showInputPage();
